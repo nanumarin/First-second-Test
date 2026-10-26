@@ -38,6 +38,7 @@ legend{font-size:1.25rem;font-weight:700;line-height:1.5;margin-bottom:.8rem;pad
 .score{font-size:3rem;font-weight:800;line-height:1.1}
 .rev{border-top:3px solid var(--azul);padding-top:.8rem;margin-top:.8rem}
 .rev p{margin:.25rem 0}
+.timer{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;border:3px solid var(--azul);border-radius:10px;padding:.4rem .9rem;background:var(--amarillo);font-weight:700;margin-bottom:.5rem}.timer .btn{min-height:40px;padding:.2rem .8rem}.sr{position:absolute;left:-9999px}
 .note{font-size:.95rem}
 </style>
 </head>
@@ -50,7 +51,7 @@ legend{font-size:1.25rem;font-weight:700;line-height:1.5;margin-bottom:.8rem;pad
     <button class="btn" id="bigger" aria-label="Aumentar tamaño del texto">A+</button>
   </div>
 </header>
-<main id="app" aria-live="polite"></main>
+<main id="app"></main>
 
 <script>
 const SLIDES=[
@@ -60,13 +61,14 @@ const SLIDES=[
 {h:"¿Cómo funciona?",b:`<ul><li>La imagen está en pantalla solo 5 segundos, tiempo suficiente para determinar las impresiones del usuario.</li>
 <li>Después se hacen una serie de preguntas para determinar cómo funciona la página.</li>
 <li>Participan usuarios que forman una <strong>muestra representativa de nuestro público objetivo</strong>.</li></ul>`},
-{h:"Las preguntas orientativas",b:`<p>Son siete preguntas:</p><ol><li>¿A qué se dedica la web?</li><li>¿Recuerdas el nombre de la compañía o del producto?</li><li>¿Cuál es el propósito de la página?</li><li>¿Qué elementos recuerdas?</li><li>¿A quién crees que va dirigida?</li><li>¿Te transmite confianza?</li><li>¿Qué impresiones te ha generado?</li></ol>
-<p>Son orientativas. Algunos usuarios no sabrán qué responder, pero <strong>toda la información es valiosa</strong>.</p>`},
+{h:"Las preguntas orientativas",b:`<p>Ejemplos del tipo de preguntas que se hacen (pueden ser más):</p><ol><li>¿A qué se dedica la web?</li><li>¿Recuerdas el nombre de la compañía o del producto?</li><li>¿Cuál es el propósito de la página?</li><li>¿Qué elementos recuerdas?</li><li>¿A quién crees que va dirigida?</li><li>¿Te transmite confianza?</li><li>¿Qué impresiones te ha generado?</li></ol>
+<p>Lo importante es el tipo de pregunta: qué es la web, qué recuerdan, a quién va dirigida y qué transmite. Algunos usuarios no sabrán qué responder, pero <strong>toda la información es valiosa</strong>.</p>`},
 {h:"¿Qué se quiere comprobar?",b:`<p>Que el diseño ofrezca una <strong>comunicación rápida, fácil y eficiente</strong>.</p>
 <p>Se observan la <strong>tipografía</strong>, los <strong>colores</strong> y la <strong>estructura</strong>, y si la página resulta <strong>atractiva</strong> y <strong>confiable</strong>.</p>
 <p>Si los usuarios responden correctamente a las preguntas, el diseño va por buen camino.</p>`},
 {h:"Resultados",b:`<p>Los resultados son sencillos: <strong>se entiende el diseño</strong> o <strong>no se entiende el diseño</strong>.</p>
-<p>Pueden ser cualitativos (cuando hay interacción con la pantalla) y cuantitativos: <strong>cuantos más participantes, más certera es la prueba</strong>.</p>`},
+<p>Pueden ser cualitativos (cuando hay interacción con la pantalla) y cuantitativos: <strong>cuantos más participantes, más certera es la prueba</strong>.</p>
+<p>Como referencia, si <strong>al menos el 80% de los usuarios</strong> entiende el diseño, se considera un éxito. Si el porcentaje es menor, hay que hacer cambios.</p>`},
 {h:"Otro método: SUS",b:`<p><strong>SUS</strong> significa <em>System Usability Scale</em>. Es un cuestionario de 10 afirmaciones.</p>
 <p>Usa la <strong>escala de Likert</strong>, creada por Rensis Likert en 1930. El usuario elige entre varias respuestas; con 5 opciones hay <strong>2 negativas, 1 neutra y 2 positivas</strong>.</p>`},
 {h:"Otro método: PURE",b:`<p><strong>PURE</strong> (<em>Pragmatic Usability Rating by Experts</em>) fue desarrollado por Nielsen Norman Group.</p>
@@ -81,7 +83,7 @@ const Q=[
 ["El test de los cinco segundos es una técnica de…",["Programación backend","Investigación UX","Posicionamiento SEO","Marketing por correo"],[1]],
 ["¿Qué es una landing page?",["Una página para realizar una acción concreta, como comprar o registrarse","Una página de preguntas frecuentes","El mapa del sitio web","Una página de error"],[0]],
 ["¿Qué se quiere conocer con el test?",["La velocidad de carga de la web","Las impresiones del usuario y si entiende el diseño","El número de visitas","El precio de los productos"],[1]],
-["¿Cuántas preguntas orientativas incluye el resumen?",["3","5","7","10"],[2]],
+["Según la referencia del resumen, ¿a partir de qué porcentaje de usuarios que entienden el diseño se considera un éxito?",["100%","80%","65%","50%"],[1]],
 ["Si un usuario no sabe qué responder a alguna pregunta…",["Se descarta su test entero","Toda la información sigue siendo valiosa","Se repite el test con otra imagen","Se le pide que adivine"],[1]],
 ["Los participantes deben ser…",["Cualquier persona disponible","Solo expertos en diseño","Una muestra representativa del público objetivo","Únicamente los diseñadores"],[2]],
 ["Si los usuarios responden correctamente a las preguntas, significa que…",["El diseño va por buen camino","El diseño debe rehacerse","El test no es válido","Hay demasiados colores"],[0]],
@@ -100,6 +102,18 @@ const Q=[
 ];
 
 const app=document.getElementById("app");
+const KEY="fst-v1",LIMIT=20*60*1000;
+let timerId=null,hideT=false,locked=false,deadline=0,warned={};
+function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}}
+function persist(x){try{localStorage.setItem(KEY,JSON.stringify(Object.assign({deadline,ans:st.ans,q:st.q,expired:locked},x||{})))}catch(e){}}
+function fmt(ms){const s=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function tick(){
+ const left=deadline-Date.now(),el=document.getElementById("tv");
+ if(el)el.textContent=hideT?"oculto":fmt(left);
+ [[300000,"Quedan 5 minutos."],[60000,"Queda 1 minuto."]].forEach(([t,m])=>{if(left<=t&&!warned[t]){warned[t]=1;const r=document.getElementById("sr");if(r)r.textContent=m}});
+ if(left<=0){clearInterval(timerId);locked=true;persist();results()}
+}
+function startTimer(){clearInterval(timerId);timerId=setInterval(tick,1000)}
 let st={screen:"intro",slide:0,q:0,ans:Q.map(()=>[])};
 let size=100;
 const $=s=>document.querySelector(s);
@@ -115,8 +129,8 @@ function intro(){
  show(`<h1>Lee, recuerda y comprueba</h1>
  <div class="card"><p>Esta prueba de concepto tiene dos partes:</p>
  <ol><li><strong>Lectura:</strong> un resumen de ${SLIDES.length} pantallas sobre el test de los cinco segundos (Five second test).</li>
- <li><strong>Test:</strong> 20 preguntas para ver cuánto has comprendido y recuerdas. 15 tienen una única respuesta correcta y 5 admiten varias.</li></ol>
- <p class="note">No hay límite de tiempo ni sonidos. Puedes cambiar el tamaño del texto arriba. Durante el test no podrás consultar el resumen.</p></div>
+ <li><strong>Test:</strong> 20 preguntas con un límite de <strong>20 minutos</strong> para ver cuánto has comprendido y recuerdas. 15 tienen una única respuesta correcta y 5 admiten varias.</li></ol>
+ <p class="note">No hay límite de tiempo ni sonidos. Puedes cambiar el tamaño del texto arriba. Durante el test no podrás consultar el resumen. Al agotarse los 20 minutos el test se cierra y no se puede repetir.</p></div>
  <button class="btn" id="go">Empezar a leer</button>`);
  $("#go").onclick=()=>{st.screen="learn";learn()};
 }
@@ -130,41 +144,52 @@ function learn(){
  $("#next").onclick=()=>{if(last){ready()}else{st.slide++;learn()}};
 }
 function ready(){
- show(`<h2>¿Listo para el test?</h2><div class="card"><p>Una vez empieces, no podrás volver al resumen. Responde con lo que recuerdes; no pasa nada si dudas.</p></div>
+ show(`<h2>¿Listo para el test?</h2><div class="card"><p>Una vez empieces, no podrás volver al resumen y empezará a contar un temporizador de 20 minutos. Al agotarse, el test se cierra y no podrás repetirlo. Responde con lo que recuerdes; no pasa nada si dudas.</p></div>
  <div class="nav"><button class="btn sec" id="back">← Volver a leer</button><button class="btn" id="start">Empezar el test</button></div>`);
- $("#back").onclick=learn;$("#start").onclick=()=>{st.screen="quiz";st.q=0;quiz()};
+ $("#back").onclick=learn;$("#start").onclick=()=>{deadline=Date.now()+LIMIT;warned={};st.screen="quiz";st.q=0;persist();startTimer();quiz()};
 }
 function quiz(){
  const [t,o,c,m]=Q[st.q],a=st.ans[st.q],type=m?"checkbox":"radio",last=st.q===Q.length-1;
- show(`<p class="meta">Pregunta ${st.q+1} de ${Q.length}</p>${bar(st.q+1,Q.length)}
+ show(`<div class="timer"><span>Tiempo restante: <span id="tv"></span></span><button class="btn sec" id="tt">${hideT?"Mostrar tiempo":"Ocultar tiempo"}</button></div><div id="sr" class="sr" role="status"></div><p class="meta">Pregunta ${st.q+1} de ${Q.length}</p>${bar(st.q+1,Q.length)}
  <div class="card"><span class="tag">${m?"Varias respuestas correctas":"Una respuesta correcta"}</span>
  <fieldset><legend><h2 style="font-size:inherit;margin:.6rem 0">${t}</h2></legend>
  ${o.map((x,i)=>`<label class="opt${a.includes(i)?" sel":""}"><input type="${type}" name="q" value="${i}" ${a.includes(i)?"checked":""}><span>${x}</span></label>`).join("")}</fieldset>
  <p class="note">${m?"Marca todas las que creas correctas.":"Elige una opción."} Puedes cambiar tu respuesta antes de seguir.</p></div>
  <div class="nav"><button class="btn sec" id="prev" ${st.q?"":"disabled"}>← Anterior</button>
  <button class="btn" id="next">${last?"Ver resultados":"Siguiente →"}</button></div>`);
+ tick();
+ $("#tt").onclick=e=>{hideT=!hideT;e.target.textContent=hideT?"Mostrar tiempo":"Ocultar tiempo";tick()};
  app.querySelectorAll("input").forEach(inp=>inp.onchange=()=>{
-  st.ans[st.q]=[...app.querySelectorAll("input:checked")].map(x=>+x.value);
+  st.ans[st.q]=[...app.querySelectorAll("input:checked")].map(x=>+x.value);persist();
   app.querySelectorAll(".opt").forEach(l=>l.classList.toggle("sel",l.querySelector("input").checked));
  });
- $("#prev").onclick=()=>{st.q--;quiz()};
+ $("#prev").onclick=()=>{st.q--;persist();quiz()};
  $("#next").onclick=()=>{
   if(!st.ans[st.q].length&&!confirm("No has respondido esta pregunta. ¿Quieres continuar sin responder?"))return;
-  if(last)results();else{st.q++;quiz()}
+  if(last){clearInterval(timerId);persist({done:true});results()}else{st.q++;persist();quiz()}
  };
 }
 const same=(a,b)=>a.length===b.length&&a.every(x=>b.includes(x));
 function results(){
  const ok=Q.map((q,i)=>same(st.ans[i],q[2])),n=ok.filter(Boolean).length;
  const names=(q,ix)=>ix.length?ix.map(i=>q[1][i]).join(" · "):"Sin responder";
- show(`<h1>Resultados</h1><div class="card"><p class="score">${n} / ${Q.length}</p><p>Has acertado el ${Math.round(n/Q.length*100)}% de las preguntas. En las de respuesta múltiple se cuenta acierto solo si marcas exactamente las correctas.</p></div>
+ show(`<h1>Resultados</h1><div class="card"><p class="score">${n} / ${Q.length}</p><p>Has acertado el ${Math.round(n/Q.length*100)}% de las preguntas. En las de respuesta múltiple se cuenta acierto solo si marcas exactamente las correctas.</p>${locked?"<p><strong>Se agotó el tiempo de 20 minutos.</strong> Se han corregido las respuestas que alcanzaste a dar; las demás cuentan como sin responder. El test ya no se puede repetir en este navegador.</p>":""}</div>
  <h2>Revisión</h2><div class="card">${Q.map((q,i)=>`<div class="rev"><p><strong>${i+1}. ${q[0]}</strong></p>
  <p><strong>${ok[i]?"✓ Correcta":"✗ Incorrecta"}</strong></p>
  <p>Tu respuesta: ${names(q,st.ans[i])}</p>${ok[i]?"":`<p>Respuesta correcta: ${names(q,q[2])}</p>`}</div>`).join("")}</div>
- <div class="nav"><button class="btn sec" id="again">Volver al inicio</button></div>`);
- $("#again").onclick=intro;
+ ${locked?"":`<div class="nav"><button class="btn sec" id="again">Volver al inicio</button></div>`}`);
+ const ag=$("#again");if(ag)ag.onclick=intro;
 }
-intro();
+(function boot(){
+ if(location.hash==="#reiniciar"){try{localStorage.removeItem(KEY)}catch(e){}history.replaceState(null,"",location.pathname);return intro()}
+ const d=load();
+ if(d&&d.deadline&&Array.isArray(d.ans)&&(d.expired||!d.done)){
+  deadline=d.deadline;st.ans=d.ans;st.q=Math.min(d.q||0,Q.length-1);
+  if(d.expired||Date.now()>=deadline){locked=true;persist();return results()}
+  st.screen="quiz";startTimer();return quiz();
+ }
+ intro();
+})();
 </script>
 </body>
 </html>
