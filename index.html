@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Five second test · Lee, recuerda y comprueba</title>
+<style>
+:root{--azul:#3A3D7E;--amarillo:#FDDF48;--cielo:#67AADE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cielo);color:var(--azul);font:1.125rem/1.75 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh}
+header{background:var(--azul);color:var(--amarillo);padding:.75rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+header strong{font-size:1.1rem}
+.tools{display:flex;gap:.5rem;align-items:center;font-size:.9rem}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1rem 3rem}
+h1,h2{line-height:1.3;margin:.2em 0 .6em}
+h1{font-size:2rem}h2{font-size:1.5rem}
+h1:focus,h2:focus{outline:none}
+.card{background:var(--amarillo);border:3px solid var(--azul);border-radius:14px;padding:1.5rem;margin:1rem 0}
+.card p,.card li{max-width:65ch}
+li{margin:.4em 0}
+.btn{background:var(--azul);color:var(--amarillo);border:3px solid var(--azul);padding:.7rem 1.25rem;font:inherit;font-weight:700;border-radius:10px;cursor:pointer;min-height:48px}
+.btn.sec{background:var(--amarillo);color:var(--azul)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.tools .btn{min-height:40px;padding:.2rem .8rem;border-color:var(--amarillo)}
+.btn:focus-visible,input:focus-visible{outline:4px solid var(--azul);outline-offset:3px}
+header .btn:focus-visible{outline-color:var(--amarillo)}
+.nav{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:1.25rem}
+.bar{height:14px;border:3px solid var(--azul);border-radius:9px;background:var(--amarillo);overflow:hidden;margin:.5rem 0 1rem}
+.bar i{display:block;height:100%;background:var(--azul)}
+.meta{font-weight:700}
+.tag{display:inline-block;border:2px solid var(--azul);border-radius:8px;padding:0 .6rem;font-weight:700;font-size:.95rem}
+fieldset{border:0;margin:0;padding:0}
+legend{font-size:1.25rem;font-weight:700;line-height:1.5;margin-bottom:.8rem;padding:0}
+.opt{display:flex;gap:.8rem;align-items:flex-start;border:3px solid var(--azul);border-radius:10px;padding:.7rem .9rem;margin:.6rem 0;cursor:pointer}
+.opt input{width:1.4rem;height:1.4rem;margin-top:.3rem;flex:none;accent-color:var(--azul)}
+.opt.sel{background:var(--azul);color:var(--amarillo)}
+.opt.sel input{accent-color:var(--amarillo)}
+.score{font-size:3rem;font-weight:800;line-height:1.1}
+.rev{border-top:3px solid var(--azul);padding-top:.8rem;margin-top:.8rem}
+.rev p{margin:.25rem 0}
+.note{font-size:.95rem}
+</style>
+</head>
+<body>
+<header>
+  <strong>Five second test</strong>
+  <div class="tools" role="group" aria-label="Tamaño del texto">
+    <span>Texto:</span>
+    <button class="btn" id="smaller" aria-label="Reducir tamaño del texto">A−</button>
+    <button class="btn" id="bigger" aria-label="Aumentar tamaño del texto">A+</button>
+  </div>
+</header>
+<main id="app" aria-live="polite"></main>
+
+<script>
+const SLIDES=[
+{h:"¿Qué es el test de los cinco segundos?",b:`<p>Es una <strong>técnica de investigación UX</strong> que se aplica a usuarios.</p>
+<p>Se muestra una imagen, normalmente la pantalla inicial o una <em>landing page</em>, durante solo <strong>5 segundos</strong>.</p>
+<p>Una <strong>landing page</strong> es una página que se usa para realizar una acción concreta: comprar entradas para un concierto, descargar un archivo o registrarse.</p>`},
+{h:"¿Cómo funciona?",b:`<ul><li>La imagen está en pantalla solo 5 segundos, tiempo suficiente para determinar las impresiones del usuario.</li>
+<li>Después se hacen una serie de preguntas para determinar cómo funciona la página.</li>
+<li>Participan usuarios que forman una <strong>muestra representativa de nuestro público objetivo</strong>.</li></ul>`},
+{h:"Las preguntas orientativas",b:`<p>Son siete preguntas:</p><ol><li>¿A qué se dedica la web?</li><li>¿Recuerdas el nombre de la compañía o del producto?</li><li>¿Cuál es el propósito de la página?</li><li>¿Qué elementos recuerdas?</li><li>¿A quién crees que va dirigida?</li><li>¿Te transmite confianza?</li><li>¿Qué impresiones te ha generado?</li></ol>
+<p>Son orientativas. Algunos usuarios no sabrán qué responder, pero <strong>toda la información es valiosa</strong>.</p>`},
+{h:"¿Qué se quiere comprobar?",b:`<p>Que el diseño ofrezca una <strong>comunicación rápida, fácil y eficiente</strong>.</p>
+<p>Se observan la <strong>tipografía</strong>, los <strong>colores</strong> y la <strong>estructura</strong>, y si la página resulta <strong>atractiva</strong> y <strong>confiable</strong>.</p>
+<p>Si los usuarios responden correctamente a las preguntas, el diseño va por buen camino.</p>`},
+{h:"Resultados",b:`<p>Los resultados son sencillos: <strong>se entiende el diseño</strong> o <strong>no se entiende el diseño</strong>.</p>
+<p>Pueden ser cualitativos (cuando hay interacción con la pantalla) y cuantitativos: <strong>cuantos más participantes, más certera es la prueba</strong>.</p>`},
+{h:"Otro método: SUS",b:`<p><strong>SUS</strong> significa <em>System Usability Scale</em>. Es un cuestionario de 10 afirmaciones.</p>
+<p>Usa la <strong>escala de Likert</strong>, creada por Rensis Likert en 1930. El usuario elige entre varias respuestas; con 5 opciones hay <strong>2 negativas, 1 neutra y 2 positivas</strong>.</p>`},
+{h:"Otro método: PURE",b:`<p><strong>PURE</strong> (<em>Pragmatic Usability Rating by Experts</em>) fue desarrollado por Nielsen Norman Group.</p>
+<p>Cuantifica la dificultad de uso y da datos cualitativos para solucionar problemas. Es similar a un análisis heurístico.</p>
+<p>Un experto puntúa cada paso de una tarea: <strong>1</strong> (verde, fácil, baja carga cognitiva), <strong>2</strong> (amarillo, esfuerzo notable) y <strong>3</strong> (rojo, difícil: los usuarios fallan o abandonan). La suma da la puntuación total.</p>`},
+{h:"Otro método: HEART de Google",b:`<p>Es una métrica para analizar datos a gran escala de los usuarios. Sus cinco categorías:</p>
+<ul><li><strong>Happiness</strong> (felicidad): actitudes y percepciones.</li><li><strong>Engagement</strong> (compromiso): nivel de participación.</li><li><strong>Adoption</strong> (adopción): aprobación inicial del producto.</li><li><strong>Retention</strong> (retención): usuarios existentes que se vuelven recurrentes.</li><li><strong>Task success</strong> (éxito de la tarea): eficiencia, efectividad y errores.</li></ul>`}
+];
+
+const Q=[
+["¿Durante cuánto tiempo se muestra la imagen en el test de los cinco segundos?",["2 segundos","5 segundos","10 segundos","30 segundos"],[1]],
+["El test de los cinco segundos es una técnica de…",["Programación backend","Investigación UX","Posicionamiento SEO","Marketing por correo"],[1]],
+["¿Qué es una landing page?",["Una página para realizar una acción concreta, como comprar o registrarse","Una página de preguntas frecuentes","El mapa del sitio web","Una página de error"],[0]],
+["¿Qué se quiere conocer con el test?",["La velocidad de carga de la web","Las impresiones del usuario y si entiende el diseño","El número de visitas","El precio de los productos"],[1]],
+["¿Cuántas preguntas orientativas incluye el resumen?",["3","5","7","10"],[2]],
+["Si un usuario no sabe qué responder a alguna pregunta…",["Se descarta su test entero","Toda la información sigue siendo valiosa","Se repite el test con otra imagen","Se le pide que adivine"],[1]],
+["Los participantes deben ser…",["Cualquier persona disponible","Solo expertos en diseño","Una muestra representativa del público objetivo","Únicamente los diseñadores"],[2]],
+["Si los usuarios responden correctamente a las preguntas, significa que…",["El diseño va por buen camino","El diseño debe rehacerse","El test no es válido","Hay demasiados colores"],[0]],
+["¿Qué ocurre con el número de participantes?",["Es irrelevante","Cuantos más, más certera es la prueba","Más de cinco invalida el test","Solo importa en SUS"],[1]],
+["¿Qué significan las siglas SUS?",["Simple User Survey","System Usability Scale","Standard UX Score","Site Usage Study"],[1]],
+["La escala de Likert fue creada por…",["Jakob Nielsen en 1993","Google en 2010","Rensis Likert en 1930","Donald Norman en 1988"],[2]],
+["En una escala de Likert de 5 respuestas, la proporción es…",["1 negativa, 1 neutra y 3 positivas","2 negativas, 1 neutra y 2 positivas","3 negativas y 2 positivas","5 neutras"],[1]],
+["¿Quién desarrolló el método PURE?",["Google","Apple","Nielsen Norman Group","UXtweak"],[2]],
+["En PURE, un paso puntuado con 3 (rojo) significa…",["Fácil, con baja carga cognitiva","Requiere un esfuerzo notable","Difícil: los usuarios fallan o abandonan","No evaluado"],[2]],
+["En HEART, ¿qué categoría se refiere a usuarios existentes que se vuelven recurrentes?",["Happiness","Adoption","Retention","Engagement"],[2]],
+["¿Cuáles son preguntas orientativas del test? (varias respuestas)",["¿A qué se dedica la web?","¿Recuerdas el nombre de la compañía o del producto?","¿Cuántos años tiene el diseñador?","¿La página te transmite confianza?","¿Cuál fue tu última compra?"],[0,1,3],1],
+["¿Qué aspectos del diseño se observan? (varias respuestas)",["Tipografía","Colores","Estructura","Velocidad del servidor","Cifrado de datos"],[0,1,2],1],
+["¿Qué categorías pertenecen a HEART? (varias respuestas)",["Happiness","Engagement","Hierarchy","Task success","Navigation"],[0,1,3],1],
+["¿Qué métodos se presentan como otros métodos de investigación? (varias respuestas)",["SUS","PURE","HEART","Card sorting","Test A/B"],[0,1,2],1],
+["Task success de HEART se refiere a métricas de… (varias respuestas)",["Eficiencia","Efectividad","Errores","Popularidad en redes","Precio"],[0,1,2],1]
+];
+
+const app=document.getElementById("app");
+let st={screen:"intro",slide:0,q:0,ans:Q.map(()=>[])};
+let size=100;
+const $=s=>document.querySelector(s);
+function setSize(d){size=Math.min(150,Math.max(80,size+d));document.documentElement.style.fontSize=size+"%"}
+$("#smaller").onclick=()=>setSize(-10);
+$("#bigger").onclick=()=>setSize(10);
+
+function show(html){app.innerHTML=html;const h=app.querySelector("h1,h2");if(h){h.tabIndex=-1;h.focus({preventScroll:false})}window.scrollTo(0,0)}
+const bar=(n,t)=>`<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${t}" aria-valuenow="${n}"><i style="width:${n/t*100}%"></i></div>`;
+
+function intro(){
+ st={screen:"intro",slide:0,q:0,ans:Q.map(()=>[])};
+ show(`<h1>Lee, recuerda y comprueba</h1>
+ <div class="card"><p>Esta prueba de concepto tiene dos partes:</p>
+ <ol><li><strong>Lectura:</strong> un resumen de ${SLIDES.length} pantallas sobre el test de los cinco segundos (Five second test).</li>
+ <li><strong>Test:</strong> 20 preguntas para ver cuánto has comprendido y recuerdas. 15 tienen una única respuesta correcta y 5 admiten varias.</li></ol>
+ <p class="note">No hay límite de tiempo ni sonidos. Puedes cambiar el tamaño del texto arriba. Durante el test no podrás consultar el resumen.</p></div>
+ <button class="btn" id="go">Empezar a leer</button>`);
+ $("#go").onclick=()=>{st.screen="learn";learn()};
+}
+function learn(){
+ const s=SLIDES[st.slide],last=st.slide===SLIDES.length-1;
+ show(`<p class="meta">Resumen · pantalla ${st.slide+1} de ${SLIDES.length}</p>${bar(st.slide+1,SLIDES.length)}
+ <div class="card"><h2>${s.h}</h2>${s.b}</div>
+ <div class="nav"><button class="btn sec" id="prev" ${st.slide?"":"disabled"}>← Anterior</button>
+ <button class="btn" id="next">${last?"Ir al test →":"Siguiente →"}</button></div>`);
+ $("#prev").onclick=()=>{st.slide--;learn()};
+ $("#next").onclick=()=>{if(last){ready()}else{st.slide++;learn()}};
+}
+function ready(){
+ show(`<h2>¿Listo para el test?</h2><div class="card"><p>Una vez empieces, no podrás volver al resumen. Responde con lo que recuerdes; no pasa nada si dudas.</p></div>
+ <div class="nav"><button class="btn sec" id="back">← Volver a leer</button><button class="btn" id="start">Empezar el test</button></div>`);
+ $("#back").onclick=learn;$("#start").onclick=()=>{st.screen="quiz";st.q=0;quiz()};
+}
+function quiz(){
+ const [t,o,c,m]=Q[st.q],a=st.ans[st.q],type=m?"checkbox":"radio",last=st.q===Q.length-1;
+ show(`<p class="meta">Pregunta ${st.q+1} de ${Q.length}</p>${bar(st.q+1,Q.length)}
+ <div class="card"><span class="tag">${m?"Varias respuestas correctas":"Una respuesta correcta"}</span>
+ <fieldset><legend><h2 style="font-size:inherit;margin:.6rem 0">${t}</h2></legend>
+ ${o.map((x,i)=>`<label class="opt${a.includes(i)?" sel":""}"><input type="${type}" name="q" value="${i}" ${a.includes(i)?"checked":""}><span>${x}</span></label>`).join("")}</fieldset>
+ <p class="note">${m?"Marca todas las que creas correctas.":"Elige una opción."} Puedes cambiar tu respuesta antes de seguir.</p></div>
+ <div class="nav"><button class="btn sec" id="prev" ${st.q?"":"disabled"}>← Anterior</button>
+ <button class="btn" id="next">${last?"Ver resultados":"Siguiente →"}</button></div>`);
+ app.querySelectorAll("input").forEach(inp=>inp.onchange=()=>{
+  st.ans[st.q]=[...app.querySelectorAll("input:checked")].map(x=>+x.value);
+  app.querySelectorAll(".opt").forEach(l=>l.classList.toggle("sel",l.querySelector("input").checked));
+ });
+ $("#prev").onclick=()=>{st.q--;quiz()};
+ $("#next").onclick=()=>{
+  if(!st.ans[st.q].length&&!confirm("No has respondido esta pregunta. ¿Quieres continuar sin responder?"))return;
+  if(last)results();else{st.q++;quiz()}
+ };
+}
+const same=(a,b)=>a.length===b.length&&a.every(x=>b.includes(x));
+function results(){
+ const ok=Q.map((q,i)=>same(st.ans[i],q[2])),n=ok.filter(Boolean).length;
+ const names=(q,ix)=>ix.length?ix.map(i=>q[1][i]).join(" · "):"Sin responder";
+ show(`<h1>Resultados</h1><div class="card"><p class="score">${n} / ${Q.length}</p><p>Has acertado el ${Math.round(n/Q.length*100)}% de las preguntas. En las de respuesta múltiple se cuenta acierto solo si marcas exactamente las correctas.</p></div>
+ <h2>Revisión</h2><div class="card">${Q.map((q,i)=>`<div class="rev"><p><strong>${i+1}. ${q[0]}</strong></p>
+ <p><strong>${ok[i]?"✓ Correcta":"✗ Incorrecta"}</strong></p>
+ <p>Tu respuesta: ${names(q,st.ans[i])}</p>${ok[i]?"":`<p>Respuesta correcta: ${names(q,q[2])}</p>`}</div>`).join("")}</div>
+ <div class="nav"><button class="btn sec" id="again">Volver al inicio</button></div>`);
+ $("#again").onclick=intro;
+}
+intro();
+</script>
+</body>
+</html>
